@@ -1,21 +1,23 @@
 package com.sladderfisk.lifemod.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.ComponentArgument;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.MessageArgument;
-import net.minecraft.network.chat.ChatType;
-import net.minecraft.network.chat.OutgoingChatMessage;
-import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.scores.Objective;
-import net.minecraft.world.scores.ScoreAccess;
-import net.minecraft.world.scores.ScoreHolder;
-import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.*;
+
+import java.awt.*;
 
 public class GiveLifeCommand {
 
@@ -26,20 +28,47 @@ public class GiveLifeCommand {
         LiteralCommandNode<CommandSourceStack> commandNode = commandDispatcher.register((LiteralArgumentBuilder) Commands.literal("givelife").then(Commands.argument("target", EntityArgument.player()).executes((command) -> {
 
             ServerPlayer player = EntityArgument.getPlayer(command, "target");
+            ServerPlayer sender = command.getSource().getPlayer();
 
             if (player == null) return 1;
-            //if (player == command.getSource().getPlayer()) return 0;
+
+            if (player == command.getSource().getPlayer())
+                return SendMessage(sender, "You can't give life to yourself!!!");
+
+            if (!CanGiveLife(sender, 1))
+                return SendMessage(sender, "You don't have enought lives!");
+
+            if (!CanGiveLife(player, 0))
+                return SendMessage(sender, "You can't give life to a dead person. Dummy.");
 
             SetLife(player, 1);
+            SetLife(sender, -1);
 
-            WhisperToPlayer(command.getSource().getPlayer(), "Test");
-
-            SetLife(command.getSource().getPlayer(), -1);
-
+            SendMessage(player, sender.getName().getString() + " sent you a life!");
 
 
             return 0;
         })));
+    }
+
+    private static boolean CanGiveLife(ServerPlayer player, int minLives){
+
+        Scoreboard scoreBoard = player.getScoreboard();
+        Objective objective = scoreBoard.getObjective("Lives");
+        ScoreAccess score = scoreBoard.getOrCreatePlayerScore(player, objective);
+        int lives = score.get();
+
+        return lives > minLives;
+    }
+
+    private static int SendMessage(ServerPlayer player, String mes){
+
+        PlayerChatMessage chatMessage = PlayerChatMessage.unsigned(player.getUUID(), mes);
+
+        Component comp = Component.literal(mes);
+        player.sendSystemMessage(comp);
+
+        return 0;
     }
 
     private static void SetLife(ServerPlayer player, int val){
@@ -48,15 +77,5 @@ public class GiveLifeCommand {
         Objective objective = scoreboard.getObjective("Lives");
         ScoreAccess score = scoreboard.getOrCreatePlayerScore(player, objective);
         score.set(score.get() + val);
-    }
-
-    private static void WhisperToPlayer(ServerPlayer player, String mes){
-
-
-        OutgoingChatMessage message = OutgoingChatMessage.create(PlayerChatMessage.system(mes));
-        ChatType.Bound type = ChatType.bind(ChatType.MSG_COMMAND_INCOMING, player);
-
-        player.sendChatMessage(message, true, type);
-        player.sendChatMessage(message, false, type);
     }
 }
