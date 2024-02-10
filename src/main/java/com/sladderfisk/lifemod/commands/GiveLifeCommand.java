@@ -15,6 +15,7 @@ import net.minecraft.network.chat.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.CompassItem;
 import net.minecraft.world.scores.*;
 
 import java.awt.*;
@@ -45,8 +46,6 @@ public class GiveLifeCommand {
             SetLife(sender, -1);
 
             SendMessage(player, sender.getName().getString() + " sent you a life!");
-
-
             return 0;
         })));
     }
@@ -63,7 +62,7 @@ public class GiveLifeCommand {
 
     private static int SendMessage(ServerPlayer player, String mes){
 
-        PlayerChatMessage chatMessage = PlayerChatMessage.unsigned(player.getUUID(), mes);
+        //PlayerChatMessage chatMessage = PlayerChatMessage.unsigned(player.getUUID(), mes);
 
         Component comp = Component.literal(mes);
         player.sendSystemMessage(comp);

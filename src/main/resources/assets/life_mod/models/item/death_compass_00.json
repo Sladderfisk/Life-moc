@@ -1,0 +1,6 @@
+{
+  "parent" : "item/generated",
+  "textures": {
+    "layer0" : "life_mod:item/death_compass"
+  }
+}
