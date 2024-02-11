@@ -39,7 +39,15 @@ public class DeathCompassItem extends Item {
 
 
     @Override
+    public InteractionResult useOn(UseOnContext p_41427_) {
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+
+        player.sendSystemMessage(Component.literal("OvO"));
+
         ItemStack stack = player.getItemInHand(hand);
 
         if (!level.isClientSide()){
